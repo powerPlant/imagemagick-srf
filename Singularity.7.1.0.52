@@ -52,9 +52,6 @@ apk add --no-cache \
     libzip
 
 %runscript
-# exec /opt/imagemagick/bin/magick "$@"
-#
-# ==OR==
 if [ -x /opt/imagemagick/bin/$SINGULARITY_NAME ]; then
     exec /opt/imagemagick/bin/$SINGULARITY_NAME "$@"
 else
