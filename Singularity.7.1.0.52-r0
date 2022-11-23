@@ -1,36 +1,54 @@
 Bootstrap: docker
-From: ubuntu:jammy
+From: alpine:3.16
 Stage: build
 
 %post
-  ## Download build prerequisites
-  apt-get update
-  apt-get -y install git make build-dependency1
-  
-  ## Build
-  cd /opt
-  git clone URL
-  make
+VERSION='7.1.0-52'
+## Download build prerequisites
+# apt-get update
+# apt-get -y install git make build-dependency1
+apk add --no-cache \
+    build-base \
+    libtool \
+    libheif-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    tiff-dev \
+    librsvg-dev \
+    libraw-dev \
+    libzip-dev \
+    curl
+
+## Build
+cd /tmp
+curl -sL https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${VERSION}.tar.gz | tar -xz
+cd ImageMagick-${VERSION}
+./configure --prefix=/opt/imagemagick \
+    --with-modules=yes \
+    --with-rsvg=yes
+
+make
+make install
 
 Bootstrap: docker
-From: ubuntu:jammy
+From: alpine:3.16
 Stage: final
 
 %labels
-Maintainer @plantandfood.co.nz
-Version 
+Maintainer ben.warren@plantandfood.co.nz
+Version 7.1.0.52-r0
 
 %files from build
-  /opt/URL/bin/tool /usr/local/bin/
+/opt/imagemagick/* /usr/local/
 
 %runscript
-  exec tool "$@"
+exec magick "$@"
+#
+# ==OR==
 
-==OR==
-
-if [ -x /usr/local/bin/$SINGULARITY_NAME ]; then
-    exec $SINGULARITY_NAME "$@"
-else
-  /bin/echo -e "This Singularity image cannot provide a single entrypoint. Please use \"singularity exec $SINGULARITY_NAME <cmd>\", where <cmd> is one of the following:\n"
-  exec ls /usr/local/bin
-fi
+# if [ -x /usr/local/bin/$SINGULARITY_NAME ]; then
+    # exec $SINGULARITY_NAME "$@"
+# else
+  # /bin/echo -e "This Singularity image cannot provide a single entrypoint. Please use \"singularity exec $SINGULARITY_NAME <cmd>\", where <cmd> is one of the following:\n"
+  # exec ls /usr/local/bin
+# fi
